@@ -5,6 +5,7 @@
 #include <utility>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <queue>
 #include <iostream>
 #include <sstream>
@@ -237,8 +238,31 @@ public:
     }
 
     void print_graph() const {
-        //doubt
+    unordered_set<string> seen;
+
+    for (const auto& tensor_ptr : tensors_) {
+        Tensor<T>* tensor = tensor_ptr.get();
+
+        Operator<T>* from = tensor->producer_;
+        if (!from) {
+            continue;
+        }
+        for (Operator<T>* to : tensor->consumers_) {
+            if (!to) {
+                continue;
+            }
+            string edge = from->name() + "->" + to->name();
+
+            if (seen.find(edge) == seen.end()) {
+                seen.insert(edge);
+                cout << from->name()
+                     << " --> "
+                     << to->name()
+                     << "\n";
+            }
+        }
     }
+}
 
     double get_fastest_execution() const {
         vector<Operator<T>*> order = topological_sort();
