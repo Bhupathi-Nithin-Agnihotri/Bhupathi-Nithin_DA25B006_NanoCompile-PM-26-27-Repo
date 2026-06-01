@@ -4,6 +4,10 @@
 #include <stdexcept>
 #include <utility>
 #include <memory>
+#include <unordered_map>
+#include <queue>
+#include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -154,7 +158,9 @@ public:
 protected:
     vector<Tensor<T>*> inputs_;
     vector<Tensor<T>*> outputs_;
+    double cost = 0;
 };
+
 template<typename T>
 class Graph {
 public:
@@ -170,8 +176,82 @@ public:
     void add_tensor(Tptr tensor) {
         tensors_.push_back(move(tensor));
     }
-    bool is_valid() {
 
+    vector<Operator<T>*> topological_sort() const {
+        unordered_map<Operator<T>*, int> in_degree;
+        unordered_map<Operator<T>*, vector<Operator<T>*>> adj;
+
+        for (auto& op_ptr : operators_) {
+            Operator<T>* op = op_ptr.get();
+            if (!in_degree.count(op)) {
+                in_degree[op] = 0;
+            }
+
+            for (Tensor<T>* out : op->outputs()) {
+                for (Operator<T>* consumer : out->consumers_) {
+                    adj[op].push_back(consumer);
+                    in_degree[consumer]++;
+                }
+            }
+        }
+        queue<Operator<T>*> ready;
+        for (auto& [op, deg] : in_degree) {
+            if (deg == 0) {
+                ready.push(op);
+            }
+        }
+
+        vector<Operator<T>*> res;
+        res.reserve(operators_.size());
+        while (!ready.empty()) {
+            Operator<T>* cur = ready.front();
+            ready.pop();
+            res.push_back(cur);
+
+            for (Operator<T>* succ : adj[cur]) {
+                if (--in_degree[succ] == 0) {
+                    ready.push(succ);
+                }
+            }
+        }
+
+        if (res.size() != operators_.size()) {
+            throw runtime_error("Cycle Detected.");
+        }
+        return res;
+    }
+
+    void forward() {
+        for (Operator<T>* op : topological_sort()) {
+            op->calc();
+        }
+    }
+
+    void print_graph() const {
+        //doubt
+    }
+
+    double get_fastest_execution() const {
+        vector<Operator<T>*> order = topological_sort();
+        unordered_map<Operator<T>*, double> earliest;
+
+        for (Operator<T>* op : order) {
+            double start = 0.0;
+            for (Tensor<T>* in : op->inputs()) {
+                Operator<T>* producer = const_cast<Operator<T>*>(in->producer());
+
+                if (producer) {
+                    start = max(start, earliest[producer] + producer->cost());
+                }
+            }
+            earliest[op] = start;
+        }
+
+        double ans = 0.0;
+        for (auto& [op, t] : earliest) {
+            ans = max(ans, t + op->cost());
+        }
+        return ans;
     }
 private:
     vector<Optr> operators_;
