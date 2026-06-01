@@ -15,6 +15,9 @@ template<typename T>
 class Operator;
 
 template<typename T>
+class Graph;
+
+template<typename T>
 class Tensor {
 public:
     using dtype = T;
@@ -127,6 +130,7 @@ private:
     vector<Operator<T>*> consumers_;
 
     friend class Operator<T>;
+    friend class Graph<T>;
 };
 
 template<typename T>
@@ -135,7 +139,7 @@ public:
     virtual ~Operator() = default;
     virtual string name() const = 0;
     virtual void calc() = 0;
-
+    virtual double cost() const = 0;
 
     const vector<Tensor<T>*>& inputs() const {
         return inputs_;
@@ -158,7 +162,6 @@ public:
 protected:
     vector<Tensor<T>*> inputs_;
     vector<Tensor<T>*> outputs_;
-    double cost = 0;
 };
 
 template<typename T>
