@@ -139,7 +139,13 @@ public:
     virtual ~Operator() = default;
     virtual string name() const = 0;
     virtual void calc() = 0;
-    virtual double cost() const = 0;
+    double cost_ = 0;
+    virtual double cost() const{
+        return cost_;
+    };
+    virtual void change_cost(double x) {
+        cost_ = x;
+    }
 
     const vector<Tensor<T>*>& inputs() const {
         return inputs_;
