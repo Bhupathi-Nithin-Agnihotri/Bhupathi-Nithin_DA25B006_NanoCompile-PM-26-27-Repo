@@ -40,7 +40,12 @@ public:
             throw invalid_argument("Shape and data size don't match");
         }
     }
-
+    void set_producer(Operator<T>* prod) {
+        producer_ = prod;
+    }
+    void add_consumers(Operator<T>* cons) {
+        consumers_.push_back(cons);
+    }
     const vector<size_t>& shape() const {
         return shape_;
     }
@@ -137,6 +142,7 @@ private:
 template<typename T>
 class Operator {
 public:
+    Operator() = default;
     virtual ~Operator() = default;
     virtual string name() const = 0;
     virtual void calc() = 0;
@@ -238,31 +244,30 @@ public:
     }
 
     void print_graph() const {
-    unordered_set<string> seen;
+        unordered_set<string> seen;
+        for (const auto& tensor_ptr : tensors_) {
+            Tensor<T>* tensor = tensor_ptr.get();
 
-    for (const auto& tensor_ptr : tensors_) {
-        Tensor<T>* tensor = tensor_ptr.get();
-
-        Operator<T>* from = tensor->producer_;
-        if (!from) {
-            continue;
-        }
-        for (Operator<T>* to : tensor->consumers_) {
-            if (!to) {
+            Operator<T>* from = tensor->producer_;
+            if (!from) {
                 continue;
             }
-            string edge = from->name() + "->" + to->name();
+            for (Operator<T>* to : tensor->consumers_) {
+                if (!to) {
+                    continue;
+                }
+                string edge = to_string(reinterpret_cast<size_t>(from)) + "->" + to_string(reinterpret_cast<size_t>(to));
 
-            if (seen.find(edge) == seen.end()) {
-                seen.insert(edge);
-                cout << from->name()
-                     << " --> "
-                     << to->name()
-                     << "\n";
+                if (seen.find(edge) == seen.end()) {
+                    seen.insert(edge);
+                    cout << from->name()
+                        << " --> "
+                        << to->name()
+                        << "\n";
+                }
             }
         }
     }
-}
 
     double get_fastest_execution() const {
         vector<Operator<T>*> order = topological_sort();
