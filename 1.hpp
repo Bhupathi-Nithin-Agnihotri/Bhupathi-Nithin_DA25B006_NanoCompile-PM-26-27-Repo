@@ -46,6 +46,12 @@ public:
     void add_consumers(Operator<T>* cons) {
         consumers_.push_back(cons);
     }
+    void change_name(string s) {
+        name_ = s;
+    }
+    string name() const {
+        return name_;
+    }
     const vector<size_t>& shape() const {
         return shape_;
     }
@@ -131,6 +137,7 @@ public:
 private:
     vector<size_t> shape_;
     vector<T> data_;
+    string name_;
 
     Operator<T>* producer_ = nullptr;
     vector<Operator<T>*> consumers_;
@@ -144,7 +151,12 @@ class Operator {
 public:
     Operator() = default;
     virtual ~Operator() = default;
-    virtual string name() const = 0;
+    virtual string name() const {
+        return name_;
+    };
+    virtual void change_name(string s) {
+        name_ = s;
+    }
     virtual void calc() = 0;
     double cost_ = 0;
     virtual double cost() const{
@@ -175,6 +187,7 @@ public:
 protected:
     vector<Tensor<T>*> inputs_;
     vector<Tensor<T>*> outputs_;
+    string name_ = "";
 };
 
 template<typename T>
@@ -186,6 +199,12 @@ public:
     Graph() = default;
     ~Graph() = default;
     Graph(vector<Optr> operators, vector<Tptr> tensors) : operators_(move(operators)), tensors_(move(tensors)) {};
+    const vector<Optr>& operators() const{
+        return operators_;
+    }
+    const vector<Tptr>& tensors() const{
+        return tensors_;
+    }
     void add_op(Optr op) {
         operators_.push_back(move(op));
     }
