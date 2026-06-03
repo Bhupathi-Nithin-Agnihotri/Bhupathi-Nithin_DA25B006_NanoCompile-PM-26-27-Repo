@@ -30,5 +30,5 @@ int main() {
     
     cout << nn.get()->get_fastest_execution() << "\n";
     nn.get()->print_graph();
-   return 0;
+    return 0;
 }

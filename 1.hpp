@@ -137,7 +137,7 @@ public:
 private:
     vector<size_t> shape_;
     vector<T> data_;
-    string name_;
+    string name_ = "";
 
     Operator<T>* producer_ = nullptr;
     vector<Operator<T>*> consumers_;

@@ -1,6 +1,5 @@
 #pragma once
 #include "ops.hpp"
-using namespace std;
 
 template <typename T>
 unique_ptr<Graph<T>> instantiate_graph(const vector<string>& graph_input) {
