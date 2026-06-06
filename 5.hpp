@@ -71,7 +71,6 @@ void mat_mul(const vector<double>& A, const vector<double>& B, vector<double>& C
                     }
                 }
             }
-
             workers.push_back(thread(mat_mul_one_tile, ref(A), ref(B), ref(C), M, K, N, BLOCK_SIZE, si, sj));
         }
     }
@@ -79,6 +78,19 @@ void mat_mul(const vector<double>& A, const vector<double>& B, vector<double>& C
     for (thread& t : workers) {
         if (t.joinable()) {
             t.join();
+        }
+    }
+}
+
+void mat_mul_naive(const vector<double>& A, const vector<double>& B, vector<double>& C, size_t M, size_t K, size_t N) {
+    C.assign(M * N, 0.0);
+    for (size_t i = 0; i < M; ++i) {
+        for (size_t k = 0; k < K; ++k) {
+            double a = A[i * K + k];
+
+            for (size_t j = 0; j < N; ++j) {
+                C[i * N + j] += a * B[k * N + j];
+            }
         }
     }
 }

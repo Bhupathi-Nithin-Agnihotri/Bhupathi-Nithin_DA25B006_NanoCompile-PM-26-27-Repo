@@ -310,6 +310,27 @@ public:
         }
         return ans;
     }
+
+    double earliestExecutionTime(Operator<T>* node) {
+        vector<Operator<T>*> order = topological_sort();
+        unordered_map<Operator<T>*, double> earliest;
+
+        for (Operator<T>* op : order) {
+            double start = 0.0;
+            for (Tensor<T>* in : op->inputs()) {
+                Operator<T>* producer = const_cast<Operator<T>*>(in->producer());
+
+                if (producer) {
+                    start = max(start, earliest[producer] + producer->cost());
+                }
+            }
+            earliest[op] = start;
+            if (op == node) {
+                break;
+            }
+        }
+        return earliest[node];
+    }
 private:
     vector<Optr> operators_;
     vector<Tptr> tensors_;
